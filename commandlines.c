@@ -6,16 +6,20 @@
 #include <sys/types.h>
 
 #define COMMAND_LENGTH 100
+#define MAX_ARGUMENTS 10
+#define PATH_LENGTH 100
 /**
  * main - Write a UNIX command line interpreter
  * Return: 0
  */
 int main(void)
 {
-	char command[COMMAND_LENGTH];
+	char command[COMMAND_LENGTH], *arguments[MAX_ARGUMENTS + 1];
 	int status;
 	pid_t pid;
-	char *execArgs[3];
+	char *execArgs[3], *executable, *path;
+	path = getenv("PATH");
+
 
 	while (1)
 	{
@@ -25,6 +29,12 @@ int main(void)
 		command[strcspn(command, "\n")] = '\0';
 		if (strncmp(command, "exit", 4) == 0)
 			break;
+		executable = command_line(arguments[0], path);
+		if (exucutable == NULL)
+		{
+			write(STDOUT_FILENO, "Command not found\n", 18);
+			continue;
+		}
 		pid = fork();
 		if (pid < 0)
 		{
@@ -40,9 +50,28 @@ int main(void)
 			exit(EXIT_FAILURE);
 		}
 		else
-		{
 			waitpid(pid, &status, 0);
-		}
 	}
 	return (0);
+}
+/* handle command lines with argument */
+/**
+ * command_line - Handle the PATH
+ * @command: command to be passed
+ * @path: path to the argument
+ * Return: char
+ */
+char command_line(char *command, char *path)
+{
+	char *direction;
+	char *tok;
+	tok = strtok(path, ":");
+	while (tok != NULL)
+	{
+		snprintf(dir, PATH_LENGTH, "%s/%s", tok, command);
+		if (access(direction, X_OK) == 0)
+			return (strdup(direction));
+		tok = strtok(NULL, ":");
+	}
+	return (NULL);
 }
