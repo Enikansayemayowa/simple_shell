@@ -29,6 +29,7 @@ int main(void)
 		command[strcspn(command, "\n")] = '\0';
 		if (strncmp(command, "exit", 4) == 0)
 			break;
+		command_path(command, arguments);
 		executable = command_line(arguments[0], path);
 		if (exucutable == NULL)
 		{
@@ -45,18 +46,19 @@ int main(void)
 		{
 			execArgs[0] = command;
 			execArgs[1] = NULL;
-			execve(command, execArgs, NULL);
-			perror("./shell");
+			execve(executable, execArgs, NULL);
+			perror("execve");
 			exit(EXIT_FAILURE);
 		}
 		else
 			waitpid(pid, &status, 0);
+		free(executable);
 	}
 	return (0);
 }
 /* handle command lines with argument */
 /**
- * command_line - Handle the PATH
+ * command_line - Handle command lines with arguments
  * @command: command to be passed
  * @path: path to the argument
  * Return: char
@@ -74,4 +76,23 @@ char command_line(char *command, char *path)
 		tok = strtok(NULL, ":");
 	}
 	return (NULL);
+}
+/* handle command path */
+/**
+ * command_line - Handle the PATH
+ * @command: command to be passed
+ * @path: path to the argument
+ * Return: void
+ */
+void command_path(char *command, char **arguments)
+{
+	int j = 0;
+	char *tok = strtok(command, " ");
+	while (tok != NULL && < MAX_ARGUMENTS)
+	{
+		arguments[j] = tok;
+		tok = strtok(NULL, " ");
+		j++;
+	}
+	arguments[j] = NULL;
 }
