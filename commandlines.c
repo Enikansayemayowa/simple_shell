@@ -2,24 +2,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define COMMAND_LENGTH
+#include <sys/wait.h>
+#include <sys/types.h>
+
+#define COMMAND_LENGTH 100
 /**
  * main - Write a UNIX command line interpreter
  * Return: 0
  */
-int main()
+int main(void)
 {
 	char command[COMMAND_LENGTH];
 	int status;
+	pid_t pid;
+	char *execArgs[3];
+
 	while (1)
 	{
-		write(STDOUT_FILENO, "shell$ ", 7);
+		write(STDOUT_FILENO, "cisfun# ", 7);
 		if (!fgets(command, sizeof(command), stdin))
-			breaks;
+			break;
 		command[strcspn(command, "\n")] = '\0';
 		if (strncmp(command, "exit", 4) == 0)
 			break;
-		pid_t pid = fork();
+		pid = fork();
 		if (pid < 0)
 		{
 			perror("fork");
@@ -27,8 +33,10 @@ int main()
 		}
 		else if (pid == 0)
 		{
-			execve(command, {command, NULL}, NULL);
-			perror("execve");
+			execArgs[0] = command;
+			execArgs[1] = NULL;
+			execve(command, execArgs, NULL);
+			perror("./shell");
 			exit(EXIT_FAILURE);
 		}
 		else
