@@ -32,6 +32,11 @@ char *command_line(char *command, char *path)
 	}
 	return (NULL);
 }
+/**
+ * handle_cd - this is the function to handle cd command
+ * @arguments: arguments to be passed
+ * Return: void
+ */
 void handle_cd(char **arguments)
 {
 	char *direction = arguments[1], current_direction[PATH_LENGTH];
