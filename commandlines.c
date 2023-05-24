@@ -140,7 +140,7 @@ int main(void)
 		else if (strncmp(command, "unsetenv", 8) == 0)
 			handle_Unsetenv(parseCommand(command, arguments));
 		else if (strncmp(command, "cd", 2) == 0)
-			handle_Cd(parseCommand(command, arguments));
+			handle_cd(parseCommand(command, arguments));
 		else
 		{
 			number_arguments = countArguments(command);
