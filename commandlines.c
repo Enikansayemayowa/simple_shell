@@ -133,13 +133,13 @@ int main(void)
 		if (command == NULL)
 			break;
 		if (strncmp(command, "exit", 4) == 0)
-			handleExit(countAurguments(command) <= 1 ? arguments[1] : "0");
+			handleExit(countArguments(command) <= 1 ? arguments[1] : "0");
 		else if (strncmp(command, "setenv", 6) == 0)
-			handleSetenv(parseCommand(command, arguments));
+			handle_Set_env(parseCommand(command, arguments));
 		else if (strncmp(command, "unsetenv", 8) == 0)
-			handleUnsetenv(parseCommand(command, arguments));
+			handle_Unsetenv(parseCommand(command, arguments));
 		else if (strncmp(command, "cd", 2) == 0)
-			handleCd(parseCommand(command, arguments));
+			handle_Cd(parseCommand(command, arguments));
 		else
 		{
 			number_arguments = countArguments(command);
