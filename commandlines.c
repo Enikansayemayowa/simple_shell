@@ -32,6 +32,50 @@ char *command_line(char *command, char *path)
 	}
 	return (NULL);
 }
+void handle_cd(char **arguments)
+{
+	char *direction = arguments[1], current_direction[PATH_LENGTH];
+	char new_direction[PATH_LENGTH];
+	if (direction == NULL)
+	{
+		direction = getenv("HOME");
+		if (direction == NULL)
+		{
+			write(STDERR_FILENO, "cd: no home directory\n", 22);
+			return;
+		}
+	}
+	if (strcmp(direction, "_") == 0)
+	{
+		direction = getenv("OLDPWD");
+		if (direction == NULL)
+		{
+			write(STDERR_FILENO, "cd: No previous direction\n", 26);
+			return;
+		}
+	}
+	if (getcwd(current_direction, sizeof(current_direction)) == NULL)
+	{
+		write(STDERR_FILENO, "cd: Failed to get current directory\n", 36);
+		return;
+	}
+	if (setenv("OLDPWD", current_direction, 1) != 0)
+	{
+		write(STDERR_FILENO, "cd: Failed to set OLDPWD\n", 25);
+		return;
+	}
+	if (getcwd(new_direction, sizeof(new_direction)) == NULL)
+	{
+		write(STDERR_FILENO, "cd: Failed to get current directory\n", 36);
+		return;
+	}
+	if (setenv("PWD", new_direction, 1) != 0)
+	{
+		write(STDERR_FILENO, "cd: Failed to set PWD\n", 22);
+		return;
+	}
+}
+
 /**
  * file_path - Get the file path if it exists
  * @file: file to check the path for
