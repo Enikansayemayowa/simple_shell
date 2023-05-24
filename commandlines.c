@@ -122,44 +122,51 @@ void command_path(char *command, char **arguments)
  */
 int main(void)
 {
-	char command[COMMAND_LENGTH], *arguments[MAX_ARGUMENTS + 1];
-	char *execArgs[3], *executable, *path;
-	int status;
+	char *command, *arguments[MAX_ARGUMENTS + 1];
+	char *execArgs[3], *executable, *path = getenv("PATH");
+	int status, number_arguments;
 	pid_t pid;
 
-	path = getenv("PATH");
 	while (1)
 	{
 		write(STDOUT_FILENO, "cisfun# ", 8);
-		if (!fgets(command, sizeof(command), stdin))
+		command = customGetLine();
+		if (command == NULL)
 			break;
-		command[strcspn(command, "\n")] = '\0';
 		if (strncmp(command, "exit", 4) == 0)
-			break;
-		command_path(command, arguments);
-		executable = command_line(arguments[0], path);
-		if (executable == NULL)
-		{
-			write(STDOUT_FILENO, "No such file or directory\n", 26);
-			continue;
-		}
-		pid = fork();
-		if (pid < 0)
-		{
-			perror("fork");
-			exit(EXIT_FAILURE);
-		}
-		else if (pid == 0)
-		{
-			execArgs[0] = arguments[0];
-			execArgs[1] = NULL;
-			execve(executable, execArgs, NULL);
-			perror("execve");
-			exit(EXIT_FAILURE);
-		}
+			handleExit(countAurguments(command) <= 1 ? arguments[1] : "0");
+		else if (strncmp(command, "setenv", 6) == 0)
+			handleSetenv(parseCommand(command, arguments));
+		else if (strncmp(command, "unsetenv", 8) == 0)
+			handleUnsetenv(parseCommand(command, arguments));
+		else if (strncmp(command, "cd", 2) == 0)
+			handleCd(parseCommand(command, arguments));
 		else
-			waitpid(pid, &status, 0);
-		free(executable);
+		{
+			number_arguments = countArguments(command);
+			if (number_arguments <= MAX_ARGUMENTS)
+			{
+				command_path(command, arguments);
+				executable = command_line(arguments[0], path);
+				if (executable != NULL)
+				{
+					pid = fork();
+					if (pid == 0)
+						write(STDOUT_FILENO, "Fork failed\n", 12);
+					else if (pid == 0)
+					{
+						execve(executable, execArgs, NULL);
+						_exit(EXIT_FAILURE);
+					}
+					else
+						waitpid(pid, &status, 0);
+					free(executable);
+				}else
+					write(STDOUT_FILENO, "Command not found\n", 18);
+			}else
+				write(STDOUT_FILENO, "Too many arguments\n", 19);
+		}
+		free(command);
 	}
 	return (0);
 }
