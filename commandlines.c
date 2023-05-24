@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "shell_function2.c"
 
 #define COMMAND_LENGTH 100
 #define MAX_ARGUMENTS 10
