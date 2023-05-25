@@ -68,38 +68,38 @@ void handle_Unsetenv(char **arguments)
  * custom_Get_Line - Write your own getline function
  * Return: char
  */
-char* customGetLine()
+char *customGetLine()
 {
-	char* line = NULL, current_char;
-	int line_pos = 0;
-	int line_size = BUFFER_SIZE;
-
-	while (1)
+	int BUFFER_size = BUFFER_SIZE;
+    char *buffer = malloc(BUFFER_size);
+    int c, i = 0;
+    if (buffer == NULL) {
+        perror("Memory allocation error");
+        exit(EXIT_FAILURE);
+    }
+    while ((c = getchar()) != EOF && c != '\n') {
+        buffer[i++] = c;
+        if (i == BUFFER_size - 1) 
 	{
-		if (buffer_pos >= buffer_size)
-		{
-			buffer_size = read(STDIN_FILENO, buffer, BUFFER_SIZE);
-			buffer_pos = 0;
-			if (buffer_size == 0)
-				break;
-		}
-		current_char = buffer[buffer_pos++];
-		if (current_char == '\n' || current_char == '\0')
-		{
-			line[line_pos] = '\0';
-			break;
-		}
-		line[line_pos++] = current_char;
-		if (line_pos >= line_size)
-		{
-			line_size += BUFFER_SIZE;
-			line = realloc(line, line_size);
-		}
-	}
-	return line;
+		BUFFER_size += BUFFER_SIZE;
+            buffer = realloc(buffer, BUFFER_size);
+            if (buffer == NULL) {
+                perror("Memory allocation error");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    buffer[i] = '\0';
+
+    if (c == EOF && i == 0) {
+        free(buffer);
+        return NULL;
+    }
+
+    return buffer;
 }
-/**
- * count_Arguments - counting the number of arguments
+ /**
+ *count_Arguments - counting the number of arguments
  * @command: argument command
  * Return: int
  */

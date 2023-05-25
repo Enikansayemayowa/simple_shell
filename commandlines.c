@@ -44,7 +44,7 @@ char *executable_find(char *command, char *path)
 		path_token = strtok(NULL, ":");
 	}
 	free(executable);
-	return NULL;
+	return (executable);
 }
 
 /**
@@ -82,6 +82,11 @@ void handle_cd(char **arguments)
 	if (setenv("OLDPWD", current_direction, 1) != 0)
 	{
 		write(STDERR_FILENO, "cd: Failed to set OLDPWD\n", 25);
+		return;
+	}
+	if (chdir(direction) != 0)
+	{
+		write(STDERR_FILENO, "cd: Failed to change directory\n", 30);
 		return;
 	}
 	if (getcwd(new_direction, sizeof(new_direction)) == NULL)
@@ -132,7 +137,7 @@ char **command_path(char *command, char **arguments)
 int main(void)
 {
 	char *command, *arguments[MAX_ARGUMENTS + 1];
-	char *execArgs[3], *executable, *path = getenv("PATH");
+	char *executable, *path = getenv("PATH");
 	int status, number_arguments;
 	pid_t pid;
 
@@ -160,11 +165,14 @@ int main(void)
 				if (executable != NULL)
 				{
 					pid = fork();
-					if (pid == 0)
-						write(STDOUT_FILENO, "Fork failed\n", 12);
+					if (pid == -1)
+						write(STDERR_FILENO, "Fork failed\n", 12);
 					else if (pid == 0)
 					{
-						execve(executable, execArgs, NULL);
+						arguments[0] = executable;
+						arguments[number_arguments] = NULL;
+						execve(executable, arguments, NULL);
+						perror("Execution failed");
 						_exit(EXIT_FAILURE);
 					}
 					else
