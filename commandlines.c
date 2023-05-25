@@ -136,11 +136,11 @@ int main(void)
 		if (strncmp(command, "exit", 4) == 0)
 			handleExit(countArguments(command) <= 1 ? arguments[1] : "0");
 		else if (strncmp(command, "setenv", 6) == 0)
-			handle_Set_env(parseCommand(command, arguments));
+			handle_Set_env(command_path(command, arguments));
 		else if (strncmp(command, "unsetenv", 8) == 0)
-			handle_Unsetenv(parseCommand(command, arguments));
+			handle_Unsetenv(command_path(command, arguments));
 		else if (strncmp(command, "cd", 2) == 0)
-			handle_cd(parseCommand(command, arguments));
+			handle_cd(command_path(command, arguments));
 		else
 		{
 			number_arguments = countArguments(command);
