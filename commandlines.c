@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "shell_function2.c"
+#include "main.h"
 
 #define COMMAND_LENGTH 100
 #define MAX_ARGUMENTS 10
@@ -107,8 +107,7 @@ char *file_path(char *file)
     if (stat(file, &st) == 0 && S_ISREG(st.st_mode))
         return realpath(file, NULL);
     return NULL;
-}AOA
-
+}
 /* handle command path */
 /**
  * command_path - Handle the PATH
@@ -119,16 +118,12 @@ char *file_path(char *file)
 char **command_path(char *command, char **arguments)
 {
 	int j = 0;
-	char *tok;
-
-	tok = strtok(command, " ");
-	while (tok != NULL && j < MAX_ARGUMENTS)
-	{
-		arguments[j] = tok;
-		tok = strtok(NULL, " ");
-		j++;
-	}
-	arguments[j] = NULL;
+	arguments[j] = strtok(command, " \t\n");
+    while (arguments[j] != NULL) {
+        j++;
+        arguments[j] = strtok(NULL, " \t\n");
+    }
+    return arguments;
 }
 /**
  * main - Write a UNIX command line interpreter
