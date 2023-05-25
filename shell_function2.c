@@ -1,3 +1,21 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#define COMMAND_LENGTH 100
+#define MAX_ARGUMENTS 10
+#define PATH_LENGTH 100
+
+#define BUFFER_SIZE 1024
+
+char buffer[BUFFER_SIZE];
+int buffer_pos = 0;
+int buffer_size = 0;
+
 /**
  * handleExit - function to handle exit
  * @status: check for the status

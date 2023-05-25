@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "shell_function2.c"
 
 #define COMMAND_LENGTH 100
 #define MAX_ARGUMENTS 10
@@ -12,28 +13,42 @@
 
 /* handle command lines with argument */
 /**
- * command_line - Handle command lines with arguments
+ * executable_find - Handle command lines with arguments
  * @command: command to be passed
  * @path: path to the argument
  * Return: char
  */
-char *command_line(char *command, char *path)
+char *executable_find(char *command, char *path)
 {
-	char direction[PATH_LENGTH];
-	char *tok;
-
-	tok = strtok(path, ":");
-	while (tok != NULL)
+	char *path_token, *executable = malloc(strlen(command) + 1);
+	if (executable == NULL)
 	{
-		snprintf(direction, PATH_LENGTH, "%s/%s", tok, command);
-		if (access(direction, X_OK) == 0)
-			return (strdup(direction));
-		tok = strtok(NULL, ":");
+		perror("Memory allocation error");
+		exit(EXIT_FAILURE);
 	}
-	return (NULL);
+	strcpy(executable, command);
+	if (access(executable, X_OK) == 0)
+		return executable;
+	path_token = strtok(path, ":");
+	while (path_token != NULL)
+	{
+		executable = (char *)realloc(executable, strlen(path_token) + strlen(command) + 2);
+		if (executable == NULL)
+		{
+			perror("Memory allocation error");
+			exit(EXIT_FAILURE);
+		}
+		sprintf(executable, "%s/%s", path_token, command);
+		if (access(executable, X_OK) == 0)
+			return executable;
+		path_token = strtok(NULL, ":");
+	}
+	free(executable);
+	return NULL;
 }
+
 /**
- * handle_cd - this is the function to handle cd command
+ *handle_cd - this is the function to handle cd command
  * @arguments: arguments to be passed
  * Return: void
  */
@@ -92,7 +107,7 @@ char *file_path(char *file)
     if (stat(file, &st) == 0 && S_ISREG(st.st_mode))
         return realpath(file, NULL);
     return NULL;
-}
+}AOA
 
 /* handle command path */
 /**
@@ -101,7 +116,7 @@ char *file_path(char *file)
  * @arguments: the argument to be passed
  * Return: void
  */
-void command_path(char *command, char **arguments)
+char **command_path(char *command, char **arguments)
 {
 	int j = 0;
 	char *tok;
@@ -121,44 +136,51 @@ void command_path(char *command, char **arguments)
  */
 int main(void)
 {
-	char command[COMMAND_LENGTH], *arguments[MAX_ARGUMENTS + 1];
-	char *execArgs[3], *executable, *path;
-	int status;
+	char *command, *arguments[MAX_ARGUMENTS + 1];
+	char *execArgs[3], *executable, *path = getenv("PATH");
+	int status, number_arguments;
 	pid_t pid;
 
-	path = getenv("PATH");
 	while (1)
 	{
 		write(STDOUT_FILENO, "cisfun# ", 8);
-		if (!fgets(command, sizeof(command), stdin))
+		command = customGetLine();
+		if (command == NULL)
 			break;
-		command[strcspn(command, "\n")] = '\0';
 		if (strncmp(command, "exit", 4) == 0)
-			break;
-		command_path(command, arguments);
-		executable = command_line(arguments[0], path);
-		if (executable == NULL)
-		{
-			write(STDOUT_FILENO, "No such file or directory\n", 26);
-			continue;
-		}
-		pid = fork();
-		if (pid < 0)
-		{
-			perror("fork");
-			exit(EXIT_FAILURE);
-		}
-		else if (pid == 0)
-		{
-			execArgs[0] = arguments[0];
-			execArgs[1] = NULL;
-			execve(executable, execArgs, NULL);
-			perror("execve");
-			exit(EXIT_FAILURE);
-		}
+			handleExit(countArguments(command) <= 1 ? arguments[1] : "0");
+		else if (strncmp(command, "setenv", 6) == 0)
+			handle_Set_env(command_path(command, arguments));
+		else if (strncmp(command, "unsetenv", 8) == 0)
+			handle_Unsetenv(command_path(command, arguments));
+		else if (strncmp(command, "cd", 2) == 0)
+			handle_cd(command_path(command, arguments));
 		else
-			waitpid(pid, &status, 0);
-		free(executable);
+		{
+			number_arguments = countArguments(command);
+			if (number_arguments <= MAX_ARGUMENTS)
+			{
+				command_path(command, arguments);
+				executable = executable_find(arguments[0], path);
+				if (executable != NULL)
+				{
+					pid = fork();
+					if (pid == 0)
+						write(STDOUT_FILENO, "Fork failed\n", 12);
+					else if (pid == 0)
+					{
+						execve(executable, execArgs, NULL);
+						_exit(EXIT_FAILURE);
+					}
+					else
+						waitpid(pid, &status, 0);
+					free(executable);
+				}else
+					write(STDOUT_FILENO, "Command not found\n", 18);
+			}else
+				write(STDOUT_FILENO, "Too many arguments\n", 19);
+		}
+		free(command);
 	}
 	return (0);
 }
