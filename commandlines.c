@@ -13,28 +13,42 @@
 
 /* handle command lines with argument */
 /**
- * command_line - Handle command lines with arguments
+ * executable_find - Handle command lines with arguments
  * @command: command to be passed
  * @path: path to the argument
  * Return: char
  */
-char *command_line(char *command, char *path)
+char *executable_find(char *command, char *path)
 {
-	char direction[PATH_LENGTH];
-	char *tok;
-
-	tok = strtok(path, ":");
-	while (tok != NULL)
+	char *path_token, *executable = malloc(strlen(command) + 1);
+	if (executable == NULL)
 	{
-		snprintf(direction, PATH_LENGTH, "%s/%s", tok, command);
-		if (access(direction, X_OK) == 0)
-			return (strdup(direction));
-		tok = strtok(NULL, ":");
+		perror("Memory allocation error");
+		exit(EXIT_FAILURE);
 	}
-	return (NULL);
+	strcpy(executable, command);
+	if (access(executable, X_OK) == 0)
+		return executable;
+	path_token = strtok(path, ":");
+	while (path_token != NULL)
+	{
+		executable = (char *)realloc(executable, strlen(path_token) + strlen(command) + 2);
+		if (executable == NULL)
+		{
+			perror("Memory allocation error");
+			exit(EXIT_FAILURE);
+		}
+		sprintf(executable, "%s/%s", path_token, command);
+		if (access(executable, X_OK) == 0)
+			return executable;
+		path_token = strtok(NULL, ":");
+	}
+	free(executable);
+	return NULL;
 }
+
 /**
- * handle_cd - this is the function to handle cd command
+ *handle_cd - this is the function to handle cd command
  * @arguments: arguments to be passed
  * Return: void
  */
@@ -93,7 +107,7 @@ char *file_path(char *file)
     if (stat(file, &st) == 0 && S_ISREG(st.st_mode))
         return realpath(file, NULL);
     return NULL;
-}
+}AOA
 
 /* handle command path */
 /**
@@ -102,7 +116,7 @@ char *file_path(char *file)
  * @arguments: the argument to be passed
  * Return: void
  */
-void command_path(char *command, char **arguments)
+char **command_path(char *command, char **arguments)
 {
 	int j = 0;
 	char *tok;
@@ -147,7 +161,7 @@ int main(void)
 			if (number_arguments <= MAX_ARGUMENTS)
 			{
 				command_path(command, arguments);
-				executable = command_line(arguments[0], path);
+				executable = executable_find(arguments[0], path);
 				if (executable != NULL)
 				{
 					pid = fork();
